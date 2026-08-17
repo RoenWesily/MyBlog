@@ -1,3 +1,4 @@
+import 'katex/dist/katex.min.css'
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import '@/app/globals.css';

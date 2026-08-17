@@ -1,8 +1,12 @@
 ---
-title: "从 KL、MoE 到 RAG：四篇技术博客的第一性原理学习笔记（校正版）"
-language: "zh-CN"
-updated: "2026-08-17"
-format: "Markdown"
+title: "从 KL、MoE 到 RAG：四篇技术博客的第一性原理学习笔记"
+date: "2026-08-17"
+description: "关于KL散度、MoE和RAG的学习笔记"
+tags:
+  - 机器学习
+  - NLP
+featured: false
+draft: false
 ---
 
 # 从 KL、MoE 到 RAG：四篇技术博客的第一性原理学习笔记（校正版）
@@ -74,7 +78,7 @@ format: "Markdown"
 最值得保留的是三个直觉：
 
 1. KL 不只是“两个分布差多少”，还可以理解成“用错误分布编码数据时，多付出的平均信息成本”。
-2. `KL(P‖Q)` 与 `KL(Q‖P)` 不同，交换顺序会改变惩罚重点。
+2. $D_{\mathrm{KL}}(P\parallel Q)$ 与 $D_{\mathrm{KL}}(Q\parallel P)$ 不同，交换顺序会改变惩罚重点。
 3. 在 RLHF 中，不能只背一个 KL 公式，还要分清参考策略、旧策略、当前策略，以及“估计 KL 数值”和“估计 KL 梯度”是两件不同的事。
 
 ### MoE（上）
@@ -176,9 +180,9 @@ RAG 的效果不是由某一个 embedding 模型决定，而是整条链路最�
 
 例如：
 
-- HNSW 很快，但它是近似搜索，不保证总能找到精确全局 Top-K。
-- Top-k MoE 很省专家计算，但可能产生通信瓶颈和负载长尾。
-- `k3` KL 估计器逐样本非负且数值无偏，但这不等于对它直接自动求导就得到正确的 KL 梯度。
+- HNSW 很快，但它是近似搜索，不保证总能找到精确全局 Top-$K$。
+- Top-$k$ MoE 很省专家计算，但可能产生通信瓶颈和负载长尾。
+- $k_3$ KL 估计器逐样本非负且数值无偏，但这不等于对它直接自动求导就得到正确的 KL 梯度。
 - RAG 找到相似文本，不等于找到支持答案的证据。
 
 每个大节末尾都有一个“费曼复述”。建议先遮住答案，用自己的话讲一遍，再对照。
@@ -195,18 +199,18 @@ RAG 的效果不是由某一个 embedding 模型决定，而是整条链路最�
 
 ## 2.1 大语言模型输出的不是“答案”，而是概率分布
 
-给定前文 \(h\)，语言模型计算下一个 token 的条件概率：
+给定前文 $h$，语言模型计算下一个 token 的条件概率：
 
-\[
+$$
 \pi_\theta(y\mid h)
-\]
+$$
 
 其中：
 
-- \(\pi\) 常用来表示一个策略或概率分布；
-- \(\theta\) 是模型参数；
-- \(h\) 是已经出现的上下文；
-- \(y\) 是候选下一个 token。
+- $\pi$ 常用来表示一个策略或概率分布；
+- $\theta$ 是模型参数；
+- $h$ 是已经出现的上下文；
+- $y$ 是候选下一个 token。
 
 模型真正产生文本时，再用贪婪选择或采样，从这个分布中选一个 token。
 
@@ -216,7 +220,7 @@ RAG 的效果不是由某一个 embedding 模型决定，而是整条链路最�
 
 > **术语卡｜概率分布**
 >
-> 概率分布规定了每种可能结果有多大概率。离散分布满足 \(P(x)\ge 0\) 且 \(\sum_xP(x)=1\)。语言模型的“行为”可以视为：在每个上下文下，对所有下一 token 给出一组概率。
+> 概率分布规定了每种可能结果有多大概率。离散分布满足 $P(x)\ge 0$ 且 $\sum_xP(x)=1$。语言模型的“行为”可以视为：在每个上下文下，对所有下一 token 给出一组概率。
 
 因此，训练模型至少包含三件事：
 
@@ -230,7 +234,7 @@ KL 主要属于第 3 件事；MoE 改造第 2 件事；RAG 在第 1 件事之前
 
 > **术语卡｜Vector / 向量**
 >
-> 向量是一串有顺序的数，例如 \([0.2,-1.1,0.7]\)。在机器学习中，向量用来承载对象的特征，使相似度、线性变换和梯度优化能够进行。向量不是对象本身，也不天然具有“语义”；语义来自训练目标和数据约束。
+> 向量是一串有顺序的数，例如 $[0.2,-1.1,0.7]$。在机器学习中，向量用来承载对象的特征，使相似度、线性变换和梯度优化能够进行。向量不是对象本身，也不天然具有“语义”；语义来自训练目标和数据约束。
 
 > **术语卡｜Embedding / 嵌入**
 >
@@ -250,8 +254,8 @@ KL 主要属于第 3 件事；MoE 改造第 2 件事；RAG 在第 1 件事之前
 ```
 
 - KL 比较两个概率分布；
-- MoE Router 给专家打分并选 Top-k；
-- RAG Retriever 给文档打分并取 Top-k；
+- MoE Router 给专家打分并选 Top-$k$；
+- RAG Retriever 给文档打分并取 Top-$k$；
 - PPO 用奖励和概率比决定更新方向。
 
 最常见的误区是把“分数高”误当成“绝对正确”。分数只是某个训练目标下的代理量。
@@ -266,62 +270,62 @@ KL 主要属于第 3 件事；MoE 改造第 2 件事；RAG 在第 1 件事之前
 
 ## 3.1 从编码问题推导 KL，而不是先背公式
 
-假设真实消息来自分布 \(P\)，但你误以为消息来自 \(Q\)。
+假设真实消息来自分布 $P$，但你误以为消息来自 $Q$。
 
-信息论告诉我们：一个概率越小的事件，理想编码所需的长度越长。若使用自然对数，事件 \(x\) 的信息量可写成：
+信息论告诉我们：一个概率越小的事件，理想编码所需的长度越长。若使用自然对数，事件 $x$ 的信息量可写成：
 
-\[
+$$
 -\ln P(x)
-\]
+$$
 
-若使用错误分布 \(Q\) 编码，平均编码长度是交叉熵：
+若使用错误分布 $Q$ 编码，平均编码长度是交叉熵：
 
-\[
-H(P,Q)=\mathbb E_{x\sim P}[-\ln Q(x)]
-\]
+$$
+H(P,Q)=\mathbb{E}_{x\sim P}[-\ln Q(x)]
+$$
 
-若使用真实分布 \(P\)，理论平均长度是熵：
+若使用真实分布 $P$，理论平均长度是熵：
 
-\[
-H(P)=\mathbb E_{x\sim P}[-\ln P(x)]
-\]
+$$
+H(P)=\mathbb{E}_{x\sim P}[-\ln P(x)]
+$$
 
 两者之差：
 
-\[
+$$
 H(P,Q)-H(P)
 =
-\mathbb E_{x\sim P}\left[\ln\frac{P(x)}{Q(x)}\right]
+\mathbb{E}_{x\sim P}\left[\ln\frac{P(x)}{Q(x)}\right]
 =
 D_{\mathrm{KL}}(P\parallel Q)
-\]
+$$
 
 这就是 KL 散度。
 
 > **术语卡｜Entropy / 熵**
 >
-> “熵”一词先出现在热力学中，后来由 Claude Shannon 在信息论中用于衡量不确定性。信息熵 \(H(P)\) 表示：若数据服从 \(P\)，最理想的平均编码成本是多少。  
+> “熵”一词先出现在热力学中，后来由 Claude Shannon 在信息论中用于衡量不确定性。信息熵 $H(P)$ 表示：若数据服从 $P$，最理想的平均编码成本是多少。  
 > 它不是“混乱程度”这么简单；在这里，它是一个明确的平均信息量。
 
 > **术语卡｜KL divergence / KL 散度**
 >
 > KL 来自 Solomon Kullback 与 Richard Leibler 在 1951 年发表的工作，原文称为“information for discrimination”，后来也常叫相对熵。  
-> 它衡量：当真实数据按 \(P\) 出现，却用 \(Q\) 描述或编码时，平均多付出多少信息成本。
+> 它衡量：当真实数据按 $P$ 出现，却用 $Q$ 描述或编码时，平均多付出多少信息成本。
 
 离散形式：
 
-\[
+$$
 D_{\mathrm{KL}}(P\parallel Q)
 =
 \sum_x P(x)\ln\frac{P(x)}{Q(x)}
-\]
+$$
 
 连续形式把求和换成积分，但还涉及概率密度与测度，初学时不必强行类比成“每个点的概率”。
 
 ### 对数底数决定单位
 
-- \(\ln\)：单位是 **nat**；
-- \(\log_2\)：单位是 **bit**。
+- $\ln$：单位是 **nat**；
+- $\log_2$：单位是 **bit**。
 
 更换底数只会乘一个正常数，不改变非负性和最优点。
 
@@ -329,27 +333,27 @@ D_{\mathrm{KL}}(P\parallel Q)
 
 设：
 
-\[
+$$
 P=(0.9,0.1),\qquad Q=(0.5,0.5)
-\]
+$$
 
 则：
 
-\[
+$$
 D_{\mathrm{KL}}(P\parallel Q)
 =
 0.9\ln\frac{0.9}{0.5}
 +
 0.1\ln\frac{0.1}{0.5}
 \approx 0.3681\ \text{nats}
-\]
+$$
 
 交换顺序：
 
-\[
+$$
 D_{\mathrm{KL}}(Q\parallel P)
 \approx 0.5108\ \text{nats}
-\]
+$$
 
 两个结果不同，所以 KL 不是普通几何距离。
 
@@ -359,28 +363,28 @@ D_{\mathrm{KL}}(Q\parallel P)
 
 在满足必要支持条件时：
 
-\[
+$$
 D_{\mathrm{KL}}(P\parallel Q)\ge 0
-\]
+$$
 
 且当两个分布几乎处处相等时取 0。
 
-可以由 \(\ln t\le t-1\) 推出。直觉上：真实分布本身已经给出最优平均编码，错误分布不能在平均意义上比它更省。
+可以由 $\ln t\le t-1$ 推出。直觉上：真实分布本身已经给出最优平均编码，错误分布不能在平均意义上比它更省。
 
 ### 性质二：非对称
 
 一般有：
 
-\[
+$$
 D_{\mathrm{KL}}(P\parallel Q)
 \ne
 D_{\mathrm{KL}}(Q\parallel P)
-\]
+$$
 
-**需要修正的常见解释：**非对称不是因为“对数函数不对称”。对数只是一个一元函数。真正原因是交换 \(P,Q\) 后：
+**需要修正的常见解释：**非对称不是因为“对数函数不对称”。对数只是一个一元函数。真正原因是交换 $P,Q$ 后：
 
-1. 求平均所用的权重从 \(P(x)\) 变成了 \(Q(x)\)；
-2. 比值从 \(P/Q\) 变成了 \(Q/P\)。
+1. 求平均所用的权重从 $P(x)$ 变成了 $Q(x)$；
+2. 比值从 $P/Q$ 变成了 $Q/P$。
 
 也就是说，两个方向在关注不同分布认为“经常发生”的区域。
 
@@ -389,7 +393,7 @@ D_{\mathrm{KL}}(Q\parallel P)
 > **术语卡｜Support / 支持集**
 >
 > 一个分布的支持集，是它可能产生且概率不为零的区域。  
-> 若 \(P(x)>0\) 但 \(Q(x)=0\)，则 \(\ln(P(x)/Q(x))\) 发散，\(D_{\mathrm{KL}}(P\parallel Q)=+\infty\)。
+> 若 $P(x)>0$ 但 $Q(x)=0$，则 $\ln(P(x)/Q(x))$ 发散，$D_{\mathrm{KL}}(P\parallel Q)=+\infty$。
 
 这说明：如果真实世界认为某件事可能发生，而近似模型断言它绝不可能发生，KL 会施加无限惩罚。
 
@@ -397,20 +401,20 @@ D_{\mathrm{KL}}(Q\parallel P)
 
 通常先约定：
 
-- \(P\)：目标分布、数据分布；
-- \(Q\)：待学习的近似分布。
+- $P$：目标分布、数据分布；
+- $Q$：待学习的近似分布。
 
 然后把：
 
-\[
+$$
 D_{\mathrm{KL}}(P\parallel Q)
-\]
+$$
 
 叫 Forward KL，把：
 
-\[
+$$
 D_{\mathrm{KL}}(Q\parallel P)
-\]
+$$
 
 叫 Reverse KL。
 
@@ -418,7 +422,7 @@ D_{\mathrm{KL}}(Q\parallel P)
 
 ### Forward KL 的常见倾向：覆盖目标支持
 
-若 \(P\) 在某区域有概率而 \(Q\) 给零概率，惩罚会发散。于是受限的 \(Q\) 往往倾向覆盖 \(P\) 的多个模式，常被称为：
+若 $P$ 在某区域有概率而 $Q$ 给零概率，惩罚会发散。于是受限的 $Q$ 往往倾向覆盖 $P$ 的多个模式，常被称为：
 
 - mode-covering；
 - mass-covering；
@@ -426,27 +430,27 @@ D_{\mathrm{KL}}(Q\parallel P)
 
 ### Reverse KL 的常见倾向：避开目标低概率区
 
-若 \(Q\) 把概率放在 \(P\) 几乎为零的区域，Reverse KL 惩罚很大。受限的 \(Q\) 可能集中到某一个高概率模式，常被称为：
+若 $Q$ 把概率放在 $P$ 几乎为零的区域，Reverse KL 惩罚很大。受限的 $Q$ 可能集中到某一个高概率模式，常被称为：
 
 - mode-seeking；
 - zero-forcing。
 
-**重要限定：**“Forward 一定覆盖、Reverse 一定寻峰”是对受限近似族和典型多峰例子的经验概括，不是对所有优化问题都无条件成立的定理。若 \(Q\) 的表达能力足够且优化成功，两个方向的共同最优解都是 \(Q=P\)。
+**重要限定：**“Forward 一定覆盖、Reverse 一定寻峰”是对受限近似族和典型多峰例子的经验概括，不是对所有优化问题都无条件成立的定理。若 $Q$ 的表达能力足够且优化成功，两个方向的共同最优解都是 $Q=P$。
 
 ## 3.5 KL 为什么出现在最大似然、SFT 和蒸馏中
 
 > **术语卡｜Maximum Likelihood Estimation, MLE / 最大似然估计**
 >
-> MLE 的目标是让模型给观测数据更高概率。对数据 \(x\sim P_{\text{data}}\)，最大化 \(\log Q_\theta(x)\)，等价于最小化负对数似然。  
+> MLE 的目标是让模型给观测数据更高概率。对数据 $x\sim P_{\text{data}}$，最大化 $\log Q_\theta(x)$，等价于最小化负对数似然。  
 > 由于
-> \[
+> $$
 > H(P_{\text{data}},Q_\theta)
 > =
 > H(P_{\text{data}})
 > +
 > D_{\mathrm{KL}}(P_{\text{data}}\parallel Q_\theta),
-> \]
-> 而 \(H(P_{\text{data}})\) 对模型参数不变，所以最小化交叉熵等价于最小化从数据分布到模型分布的 KL。
+> $$
+> 而 $H(P_{\text{data}})$ 对模型参数不变，所以最小化交叉熵等价于最小化从数据分布到模型分布的 KL。
 
 > **术语卡｜SFT / 监督微调**
 >
@@ -464,13 +468,13 @@ D_{\mathrm{KL}}(Q\parallel P)
 
 一个常见的正则化目标是：
 
-\[
+$$
 J(\pi_\theta)
 =
-\mathbb E_{\tau\sim\pi_\theta}[R(\tau)]
+\mathbb{E}_{\tau\sim\pi_\theta}[R(\tau)]
 -
 \beta
-\mathbb E_x\left[
+\mathbb{E}_x\left[
 D_{\mathrm{KL}}
 \bigl(
 \pi_\theta(\cdot\mid x)
@@ -478,14 +482,14 @@ D_{\mathrm{KL}}
 \pi_{\mathrm{ref}}(\cdot\mid x)
 \bigr)
 \right]
-\]
+$$
 
 其中：
 
-- \(\pi_\theta\)：正在训练的当前策略；
-- \(\pi_{\mathrm{ref}}\)：固定参考策略，通常来自 SFT；
-- \(R\)：奖励；
-- \(\beta\)：奖励与“不要偏离参考模型”之间的权衡。
+- $\pi_\theta$：正在训练的当前策略；
+- $\pi_{\mathrm{ref}}$：固定参考策略，通常来自 SFT；
+- $R$：奖励；
+- $\beta$：奖励与“不要偏离参考模型”之间的权衡。
 
 KL 的作用类似护栏：
 
@@ -499,39 +503,39 @@ KL 的作用类似护栏：
 
 ### 必须区分三个策略
 
-> **术语卡｜\(\pi_{\mathrm{ref}},\pi_{\mathrm{old}},\pi_\theta\)**
+> **术语卡｜$\pi_{\mathrm{ref}},\pi_{\mathrm{old}},\pi_\theta$**
 >
-> - \(\pi_{\mathrm{ref}}\)：固定参考模型，用于 KL 护栏；
-> - \(\pi_{\mathrm{old}}\)：生成当前 rollout 的策略快照，用于 PPO 概率比；
-> - \(\pi_\theta\)：正在 minibatch 更新的当前策略。
+> - $\pi_{\mathrm{ref}}$：固定参考模型，用于 KL 护栏；
+> - $\pi_{\mathrm{old}}$：生成当前 rollout 的策略快照，用于 PPO 概率比；
+> - $\pi_\theta$：正在 minibatch 更新的当前策略。
 >
-> \(\pi_{\mathrm{ref}}\) 与 \(\pi_{\mathrm{old}}\) 可能在训练初期相同，但角色完全不同。把它们混为一谈，会使 PPO 与 KL 公式都难以理解。
+> $\pi_{\mathrm{ref}}$ 与 $\pi_{\mathrm{old}}$ 可能在训练初期相同，但角色完全不同。把它们混为一谈，会使 PPO 与 KL 公式都难以理解。
 
-## 3.7 用样本估计 KL：k1、k2、k3
+## 3.7 用样本估计 KL：$k_1$、$k_2$、$k_3$
 
 先固定记号，否则非常容易把正负号写反。
 
 令：
 
-\[
+$$
 x\sim q,\qquad r(x)=\frac{p(x)}{q(x)}
-\]
+$$
 
 目标是估计：
 
-\[
+$$
 D_{\mathrm{KL}}(q\parallel p)
 =
-\mathbb E_{x\sim q}\left[\log\frac{q(x)}{p(x)}\right]
+\mathbb{E}_{x\sim q}\left[\log\frac{q(x)}{p(x)}\right]
 =
-\mathbb E_q[-\log r]
-\]
+\mathbb{E}_q[-\log r]
+$$
 
-### k1：最直接的估计
+### $k_1$：最直接的估计
 
-\[
+$$
 k_1=-\log r
-\]
+$$
 
 性质：
 
@@ -542,90 +546,90 @@ k_1=-\log r
 
 **修正原文表述：**“大量 token 累计后总体非负”不是有限样本下的数学保证。有限样本均值仍可能小于 0，只是样本数增大时会在适当条件下收敛到非负的真实 KL。
 
-### k2：二阶局部近似
+### $k_2$：二阶局部近似
 
-\[
-k_2=\frac12(\log r)^2
-\]
+$$
+k_2=\frac{1}{2}(\log r)^2
+$$
 
 性质：
 
 - 每个样本都非负；
 - 一般是有偏估计；
-- 当 \(p\) 与 \(q\) 很接近时，可由局部二阶近似解释；
+- 当 $p$ 与 $q$ 很接近时，可由局部二阶近似解释；
 - 分布相差较大时，偏差可能明显。
 
 “更稳定”不是无条件保证。样本非负不等于方差一定更小，也不等于梯度一定更正确。
 
-### k3：加入零均值控制变量
+### $k_3$：加入零均值控制变量
 
-\[
+$$
 k_3=(r-1)-\log r
-\]
+$$
 
 因为：
 
-\[
-\mathbb E_q[r-1]
+$$
+\mathbb{E}_q[r-1]
 =
 \sum_xq(x)\left(\frac{p(x)}{q(x)}-1\right)
 =
 \sum_xp(x)-\sum_xq(x)
 =
 0
-\]
+$$
 
 所以在支持与期望存在等条件满足时：
 
-\[
-\mathbb E_q[k_3]
+$$
+\mathbb{E}_q[k_3]
 =
 D_{\mathrm{KL}}(q\parallel p)
-\]
+$$
 
-又因为对 \(r>0\)：
+又因为对 $r>0$：
 
-\[
+$$
 r-1-\log r\ge 0
-\]
+$$
 
-所以每个样本的 \(k_3\) 都非负。
+所以每个样本的 $k_3$ 都非负。
 
 > **术语卡｜Control Variate / 控制变量**
 >
 > 控制变量是一种蒙特卡洛降方差技术：给估计量加上一个期望为零、但与原估计量相关的随机量，从而不改变期望，却可能减小波动。  
-> \(r-1\) 的期望为零，因此 \(k_3\) 可看作给 \(k_1\) 加了控制变量。
+> $r-1$ 的期望为零，因此 $k_3$ 可看作给 $k_1$ 加了控制变量。
 
 **需要保留的限定：**
 
-- “低方差”通常在 \(p,q\) 比较接近时成立得较好，不是所有分布上的绝对保证；
-- 若 \(r=p/q\) 有重尾或极端值，\(k_3\) 仍可能波动很大；
-- `k1/k2/k3` 是实践社区常用的非正式标签，不是所有教材统一采用的命名。
+- “低方差”通常在 $p,q$ 比较接近时成立得较好，不是所有分布上的绝对保证；
+- 若 $r=p/q$ 有重尾或极端值，$k_3$ 仍可能波动很大；
+- $k_1/k_2/k_3$ 是实践社区常用的非正式标签，不是所有教材统一采用的命名。
 
 ## 3.8 最关键纠错：KL 数值估计器不等于 KL 梯度估计器
 
 这是原博客最值得进一步补上的地方。
 
-假设分布 \(q_\theta\) 本身依赖参数：
+假设分布 $q_\theta$ 本身依赖参数：
 
-\[
+$$
 F(\theta)
 =
-\mathbb E_{x\sim q_\theta}[f_\theta(x)]
-\]
+\mathbb{E}_{x\sim q_\theta}[f_\theta(x)]
+$$
 
-对它求导时，不只有“对 \(f_\theta\) 求导”这一项。离散随机变量下，完整形式包含：
+对它求导时，不只有“对 $f_\theta$ 求导”这一项。离散随机变量下，完整形式包含：
 
-\[
+$$
 \nabla_\theta F
 =
-\mathbb E_{q_\theta}
+\mathbb{E}_{q_\theta}
 \left[
 f_\theta(x)\nabla_\theta\log q_\theta(x)
 +
 \nabla_\theta f_\theta(x)
 \right]
-\]
+$$
 
 第一项来自“采样分布本身随参数变化”，常叫 score-function 或 policy-gradient 项。
 
@@ -647,11 +651,11 @@ f_\theta(x)\nabla_\theta\log q_\theta(x)
 
 令：
 
-\[
+$$
 R' = R-\beta\,\widehat{\mathrm{KL}}
-\]
+$$
 
-然后用 \(R'\) 计算 return、advantage 和策略梯度。
+然后用 $R'$ 计算 return、advantage 和策略梯度。
 
 即使 KL 数值被 `detach`，它仍会通过 advantage 影响策略更新：
 
@@ -661,7 +665,7 @@ R' = R-\beta\,\widehat{\mathrm{KL}}
 → policy gradient 降低它再次出现的概率
 ```
 
-强化学习本来就通常不要求奖励对策略参数可微。策略梯度通过 \(\nabla\log\pi_\theta(a\mid s)\) 把奖励信号传给参数。因此“梯度被抹消”不是准确说法。
+强化学习本来就通常不要求奖励对策略参数可微。策略梯度通过 $\nabla\log\pi_\theta(a\mid s)$ 把奖励信号传给参数。因此“梯度被抹消”不是准确说法。
 
 ### 方式 B：显式正则项
 
@@ -679,13 +683,13 @@ R' = R-\beta\,\widehat{\mathrm{KL}}
 > **术语卡｜PPO**
 >
 > PPO 是 Proximal Policy Optimization，由 Schulman 等人在 2017 年提出。它通过限制新策略相对 rollout 策略变化过大，提升训练稳定性。常见 clipped surrogate 使用概率比：
-> \[
+> $$
 > \rho_t(\theta)
 > =
 > \frac{\pi_\theta(a_t\mid s_t)}
 > {\pi_{\mathrm{old}}(a_t\mid s_t)}
-> \]
-> 再把 \(\rho_t A_t\) 限制在一定更新范围内。
+> $$
+> 再把 $\rho_t A_t$ 限制在一定更新范围内。
 
 PPO clipping 裁剪的是 surrogate objective 中的策略概率比贡献，并不是“直接把 KL 惩罚裁掉”。但若 KL 被放进 advantage，它会和 clipped surrogate 一起经历优化；若 KL 是额外 loss，它走另一条梯度路径。有限样本、clip、stop-gradient、critic 目标和 minibatch 重用都会破坏简单的代数等价。
 
@@ -701,12 +705,12 @@ PPO clipping 裁剪的是 surrogate objective 中的策略概率比贡献，并�
 
 序列策略可分解为：
 
-\[
+$$
 \pi(y_{1:T}\mid x)
 =
 \prod_{t=1}^T
 \pi(y_t\mid x,y_{<t})
-\]
+$$
 
 在适当条件下，序列 KL 可写成沿当前策略生成历史的条件 token KL 期望之和。但要注意：
 
@@ -718,8 +722,8 @@ PPO clipping 裁剪的是 surrogate objective 中的策略概率比贡献，并�
 
 ## 3.11 费曼复述：把 KL 讲给中学生
 
-> 我有两本预测字典。真实世界按 \(P\) 出题，但我用 \(Q\) 猜题。KL 衡量我因为用错字典，平均多浪费多少编码长度。  
-> 顺序不能乱，因为 `P‖Q` 是在 \(P\) 常出现的地方检查 \(Q\)，`Q‖P` 是在 \(Q\) 常出现的地方检查 \(P\)。  
+> 我有两本预测字典。真实世界按 $P$ 出题，但我用 $Q$ 猜题。KL 衡量我因为用错字典，平均多浪费多少编码长度。  
+> 顺序不能乱，因为 $P\parallel Q$ 是在 $P$ 常出现的地方检查 $Q$，$Q\parallel P$ 是在 $Q$ 常出现的地方检查 $P$。  
 > 训练时，我们可以从模型采样来估计 KL，但“估计出一个正确平均数”和“对这个数直接求导得到正确更新”不是一回事。
 
 ### 本节检查点
@@ -727,10 +731,10 @@ PPO clipping 裁剪的是 surrogate objective 中的策略概率比贡献，并�
 你应该能回答：
 
 1. 为什么 KL 非对称？
-2. 为什么 \(P(x)>0,Q(x)=0\) 会导致无限 KL？
-3. k3 为什么既无偏又逐样本非负？
+2. 为什么 $P(x)>0,Q(x)=0$ 会导致无限 KL？
+3. $k_3$ 为什么既无偏又逐样本非负？
 4. 为什么 detached 的 KL reward 仍能影响 policy gradient？
-5. \(\pi_{\mathrm{ref}}\) 和 \(\pi_{\mathrm{old}}\) 有什么不同？
+5. $\pi_{\mathrm{ref}}$ 和 $\pi_{\mathrm{old}}$ 有什么不同？
 
 [返回目录](#toc)
 
@@ -763,9 +767,9 @@ FFN：
 > **术语卡｜FFN / Feed-Forward Network**
 >
 > FFN 是前馈网络。在 Transformer 中，它通常对每个 token 独立应用同一组参数。经典形式是：
-> \[
+> $$
 > \operatorname{FFN}(x)=W_2\phi(W_1x)
-> \]
+> $$
 > 第一层把隐藏维度扩展到中间维度，激活函数提供非线性，第二层再投影回隐藏维度。  
 > Attention 负责 token 之间“交流”，FFN 负责每个 token 内部“加工”。
 
@@ -810,19 +814,19 @@ Router 打分
 
 数学上可写成：
 
-\[
+$$
 y_t
 =
-\sum_{i\in\mathcal T_k(t)}
+\sum_{i\in\mathcal{T}_k(t)}
 g_{t,i}E_i(h_t)
-\]
+$$
 
 其中：
 
-- \(h_t\)：第 \(t\) 个 token 的隐藏表示；
-- \(E_i\)：第 \(i\) 个专家，通常是 FFN；
-- \(\mathcal T_k(t)\)：该 token 选中的 k 个专家；
-- \(g_{t,i}\)：合并专家输出的权重。
+- $h_t$：第 $t$ 个 token 的隐藏表示；
+- $E_i$：第 $i$ 个专家，通常是 FFN；
+- $\mathcal{T}_k(t)$：该 token 选中的 $k$ 个专家；
+- $g_{t,i}$：合并专家输出的权重。
 
 ## 4.3 MoE 真正的收益是什么
 
@@ -888,28 +892,28 @@ Router 与专家共同训练后，可能形成正反馈：
 
 经典做法：
 
-\[
+$$
 s_{t}=W_r h_t
-\]
+$$
 
 再用 Softmax：
 
-\[
+$$
 p_{t,i}
 =
 \frac{e^{s_{t,i}}}{\sum_j e^{s_{t,j}}}
-\]
+$$
 
-然后选择分数最大的 k 个专家。
+然后选择分数最大的 $k$ 个专家。
 
 > **术语卡｜Softmax**
 >
 > Softmax 把一组任意实数分数变成和为 1 的正数。它的指数形式会放大分数差异，因此常用于分类概率和路由权重。  
 > 现代 MoE 不一定都使用 Softmax；例如有些模型使用逐专家 Sigmoid affinity，再只在选中专家间归一化。
 
-> **术语卡｜Top-k**
+> **术语卡｜Top-$k$**
 >
-> Top-k 表示只保留分数最高的 k 个候选。它把连续分数变成离散稀疏选择。优点是省计算；缺点是边界不连续：两个分数只差一点，排名交换后，实际计算路径可能完全变化。
+> Top-$k$ 表示只保留分数最高的 $k$ 个候选。它把连续分数变成离散稀疏选择。优点是省计算；缺点是边界不连续：两个分数只差一点，排名交换后，实际计算路径可能完全变化。
 
 ## 4.6 为什么会发生负载不均衡
 
@@ -934,7 +938,7 @@ p_{t,i}
 - batch 太小；
 - 当前输入恰好高度同质；
 - 领域分布变化；
-- top-k 的离散边界；
+- top-$k$ 的离散边界；
 - capacity factor 太小；
 - 推理请求与训练分布不同。
 
@@ -942,32 +946,32 @@ p_{t,i}
 
 Switch Transformer 中经典的 Top-1 形式为：
 
-\[
+$$
 L_{\mathrm{aux}}
 =
 \alpha N\sum_{i=1}^{N} f_iP_i
-\]
+$$
 
 其中：
 
-\[
+$$
 f_i
 =
-\frac1T
+\frac{1}{T}
 \sum_{t=1}^{T}
-\mathbf 1[\operatorname{argmax}_j p_{t,j}=i]
-\]
+\mathbf{1}[\operatorname{argmax}_j p_{t,j}=i]
+$$
 
-表示实际分给专家 \(i\) 的 token 比例；
+表示实际分给专家 $i$ 的 token 比例；
 
-\[
+$$
 P_i
 =
-\frac1T
+\frac{1}{T}
 \sum_{t=1}^{T}p_{t,i}
-\]
+$$
 
-表示 Router 平均给专家 \(i\) 的概率。
+表示 Router 平均给专家 $i$ 的概率。
 
 > **术语卡｜Auxiliary loss / 辅助损失**
 >
@@ -976,73 +980,73 @@ P_i
 
 这个公式的直觉是：
 
-\[
+$$
 f_iP_i
 \approx
 \text{“已经很忙的专家，Router 还在多喜欢它”的程度}
-\]
+$$
 
-- \(f_i\) 来自离散分配，通常不直接对 Router 求导；
-- \(P_i\) 是连续概率，可以提供梯度；
-- 忙专家的 \(f_i\) 大，它对应的高 \(P_i\) 会受到更强惩罚。
+- $f_i$ 来自离散分配，通常不直接对 Router 求导；
+- $P_i$ 是连续概率，可以提供梯度；
+- 忙专家的 $f_i$ 大，它对应的高 $P_i$ 会受到更强惩罚。
 
 ### 原博客数值例子的两个修正
 
-均衡时，若 \(N=4\)：
+均衡时，若 $N=4$：
 
-\[
+$$
 f=P=(0.25,0.25,0.25,0.25)
-\]
+$$
 
 则：
 
-\[
+$$
 N\sum_i f_iP_i=1
-\]
+$$
 
 所以完整损失是：
 
-\[
+$$
 L_{\mathrm{aux}}=\alpha
-\]
+$$
 
-不是 1，除非 \(\alpha=1\)。
+不是 1，除非 $\alpha=1$。
 
-若博客给定 \(\alpha=0.01\)，均衡例子应为：
+若博客给定 $\alpha=0.01$，均衡例子应为：
 
-\[
+$$
 0.01
-\]
+$$
 
 不均衡例子中：
 
-\[
+$$
 N\sum_i f_iP_i=2.91
-\]
+$$
 
 完整损失应为：
 
-\[
+$$
 0.0291
-\]
+$$
 
-原文漏乘了 \(\alpha\)。相对比较仍然成立，但公式数值需要补全。
+原文漏乘了 $\alpha$。相对比较仍然成立，但公式数值需要补全。
 
-### 这个公式不是任意 Top-k 的统一形式
+### 这个公式不是任意 Top-$k$ 的统一形式
 
-原公式中的 `argmax` 对应 Top-1。Top-k 系统通常要按“一个 token 产生 k 次专家分配”重新定义负载比例，论文之间归一化方式也可能不同。
+原公式中的 $\operatorname{argmax}$ 对应 Top-1。Top-$k$ 系统通常要按“一个 token 产生 $k$ 次专家分配”重新定义负载比例，论文之间归一化方式也可能不同。
 
 例如一种常见定义是：
 
-\[
+$$
 f_i
 =
 \frac{N}{kT}
 \sum_t
-\mathbf1[i\in\operatorname{TopK}(t)]
-\]
+\mathbf{1}[i\in\operatorname{TopK}(t)]
+$$
 
-这时完全均衡时 \(f_i=1\)，而不是 \(1/N\)。阅读公式时不能只看符号名，必须看定义。
+这时完全均衡时 $f_i=1$，而不是 $1/N$。阅读公式时不能只看符号名，必须看定义。
 
 ## 4.8 Capacity：为什么专家要有接诊上限
 
@@ -1051,66 +1055,66 @@ f_i
 > Capacity 是一次路由组中，每个专家最多处理多少 token-to-expert 分配。它最初主要服务于静态张量形状、并行调度与避免单个专家成为长尾。  
 > 容量不是 MoE 的数学必需品，而是许多稀疏实现的工程机制；也存在 dropless MoE。
 
-总 token 数为 \(T\)，每个 token 选 k 个专家，共有 N 个专家。总分配数约为 \(Tk\)，平均每个专家：
+总 token 数为 $T$，每个 token 选 $k$ 个专家，共有 $N$ 个专家。总分配数约为 $Tk$，平均每个专家：
 
-\[
+$$
 \frac{Tk}{N}
-\]
+$$
 
 于是常见容量公式为：
 
-\[
+$$
 C
 =
 \left\lceil
 \mathrm{CF}\cdot\frac{Tk}{N}
 \right\rceil
-\]
+$$
 
-其中 CF 是 capacity factor。
+其中 $\mathrm{CF}$ 是 capacity factor。
 
 > **术语卡｜Capacity factor**
 >
-> Capacity factor 是平均负载之上的安全余量。CF 越大，溢出概率通常越低，但 padding、显存或无效计算可能增加；CF 越小，资源紧凑，但更容易溢出。
+> Capacity factor 是平均负载之上的安全余量。$\mathrm{CF}$ 越大，溢出概率通常越低，但 padding、显存或无效计算可能增加；$\mathrm{CF}$ 越小，资源紧凑，但更容易溢出。
 
 ### 原文容量例子的明确笔误
 
 给定：
 
-\[
+$$
 T=1024,\quad N=8,\quad k=1
-\]
+$$
 
 若：
 
-\[
+$$
 \mathrm{CF}=1
-\]
+$$
 
 则：
 
-\[
+$$
 C=128
-\]
+$$
 
 若：
 
-\[
+$$
 \mathrm{CF}=1.25
-\]
+$$
 
 则：
 
-\[
+$$
 C=160
-\]
+$$
 
 原文参数列表写的是 1，计算却用了 1.25。
 
-另外，原文同时用 \(\alpha\) 表示辅助损失权重和 capacity factor，容易混淆。建议固定使用：
+另外，原文同时用 $\alpha$ 表示辅助损失权重和 capacity factor，容易混淆。建议固定使用：
 
-- \(\alpha_{\mathrm{aux}}\)：辅助损失权重；
-- \(\mathrm{CF}\)：容量系数。
+- $\alpha_{\mathrm{aux}}$：辅助损失权重；
+- $\mathrm{CF}$：容量系数。
 
 ## 4.9 Token dropping 到底“丢”了什么
 
@@ -1161,9 +1165,9 @@ Expert Choice：
 
 > **术语卡｜Autoregressive / 自回归**
 >
-> 自回归模型按顺序生成：位置 \(t\) 只能依赖输入和 \(t\) 之前的 token，不能依赖尚未产生的未来 token。这叫因果约束。
+> 自回归模型按顺序生成：位置 $t$ 只能依赖输入和 $t$ 之前的 token，不能依赖尚未产生的未来 token。这叫因果约束。
 
-若训练时让一个专家查看完整序列，再从所有位置中选择 Top-c，那么位置 \(t\) 是否被选中可能取决于未来位置的分数。这对朴素的自回归解码器会造成训练—推理不匹配。
+若训练时让一个专家查看完整序列，再从所有位置中选择 Top-c，那么位置 $t$ 是否被选中可能取决于未来位置的分数。这对朴素的自回归解码器会造成训练—推理不匹配。
 
 但这不意味着 Expert Choice 在所有任务中都“违反因果性”：
 
@@ -1185,17 +1189,17 @@ Expert Choice：
 
 两者可能出现梯度竞争。Auxiliary-Loss-Free 方法改为：
 
-\[
+$$
 \operatorname{TopK}(s_{t,i}+b_i)
-\]
+$$
 
-其中 \(b_i\) 是专家动态偏置。
+其中 $b_i$ 是专家动态偏置。
 
 关键点：
 
-1. \(s+b\) 用来决定选谁；
-2. 合并专家输出时，权重仍来自原始 affinity \(s\)；
-3. \(b_i\) 不靠普通反向传播学习；
+1. $s+b$ 用来决定选谁；
+2. 合并专家输出时，权重仍来自原始 affinity $s$；
+3. $b_i$ 不靠普通反向传播学习；
 4. 根据实际负载在训练步骤之间调整偏置。
 
 生活类比：
@@ -1214,32 +1218,32 @@ Expert Choice：
 
 原博客写成按负载误差大小比例更新：
 
-\[
+$$
 b_i
 \leftarrow
 b_i-\gamma(\ell_i-\bar\ell)
-\]
+$$
 
 这是一种合理的反馈控制形式，但 Auxiliary-Loss-Free 原始方法和 DeepSeek-V3 的主要描述使用固定步长的符号更新：
 
-\[
+$$
 b_i
 \leftarrow
 b_i
 +
 \gamma\,\operatorname{sign}(\bar\ell-\ell_i)
-\]
+$$
 
 即：
 
-- 过载：减 \(\gamma\)；
-- 欠载：加 \(\gamma\)。
+- 过载：减 $\gamma$；
+- 欠载：加 $\gamma$。
 
 原论文也研究过按误差大小更新的变体，但不能把博客公式当作 DeepSeek-V3 的精确实现。
 
 ### “Loss-Free”不等于绝对没有任何辅助损失
 
-DeepSeek-V3 主要用 batch-wise 动态偏置做负载平衡，但还保留了很小的 sequence-wise 平衡损失，报告中的权重为 \(0.0001\)，用于避免单条序列内部极端失衡。
+DeepSeek-V3 主要用 batch-wise 动态偏置做负载平衡，但还保留了很小的 sequence-wise 平衡损失，报告中的权重为 $0.0001$，用于避免单条序列内部极端失衡。
 
 更准确的说法是：
 
@@ -1276,48 +1280,48 @@ DeepSeek-V3 主要用 batch-wise 动态偏置做负载平衡，但还保留了�
 
 忽略 bias，设：
 
-- token 隐藏维度：\(D\)；
-- FFN 中间维度：\(d_{\mathrm{ff}}\)；
-- token 数：\(T\)；
-- 层数：\(L\)。
+- token 隐藏维度：$D$；
+- FFN 中间维度：$d_{\mathrm{ff}}$；
+- token 数：$T$；
+- 层数：$L$。
 
 经典两矩阵 FFN：
 
-\[
-x\in\mathbb R^D
+$$
+x\in\mathbb{R}^D
 \overset{W_1}{\longrightarrow}
-\mathbb R^{d_{\mathrm{ff}}}
+\mathbb{R}^{d_{\mathrm{ff}}}
 \overset{W_2}{\longrightarrow}
-\mathbb R^D
-\]
+\mathbb{R}^D
+$$
 
 参数量约为：
 
-\[
+$$
 P_{\mathrm{FFN}}
 \approx
 Dd_{\mathrm{ff}}+d_{\mathrm{ff}}D
 =
 2Dd_{\mathrm{ff}}
-\]
+$$
 
 若把一次乘加记为 2 FLOPs，前向计算约为：
 
-\[
+$$
 F_{\mathrm{FFN}}
 \approx
 4TLDd_{\mathrm{ff}}
-\]
+$$
 
-若 \(d_{\mathrm{ff}}=4D\)：
+若 $d_{\mathrm{ff}}=4D$：
 
-\[
+$$
 P_{\mathrm{FFN}}\approx 8D^2
-\]
+$$
 
-\[
+$$
 F_{\mathrm{FFN}}\approx 16TLD^2
-\]
+$$
 
 > **术语卡｜FLOPs**
 >
@@ -1333,7 +1337,7 @@ F_{\mathrm{FFN}}\approx 16TLD^2
 
 常见 SwiGLU：
 
-\[
+$$
 \operatorname{SwiGLU}(x)
 =
 W_o\left[
@@ -1341,45 +1345,45 @@ W_o\left[
 \odot
 (W_ux)
 \right]
-\]
+$$
 
 有三个矩阵：
 
-- \(W_g\)：gate projection；
-- \(W_u\)：up projection；
-- \(W_o\)：down/output projection。
+- $W_g$：gate projection；
+- $W_u$：up projection；
+- $W_o$：down/output projection。
 
-若三个投影都对应中间宽度 \(d_{\mathrm{ff}}\)，参数量约为：
+若三个投影都对应中间宽度 $d_{\mathrm{ff}}$，参数量约为：
 
-\[
+$$
 3Dd_{\mathrm{ff}}
-\]
+$$
 
 前向 FLOPs 约为：
 
-\[
+$$
 6TDd_{\mathrm{ff}}
-\]
+$$
 
-实际模型常把 SwiGLU 中间维度调小，使参数量或 FLOPs 与传统 \(4D\) ReLU FFN 接近。因此不能看到 “GLU” 仍直接套用两矩阵 \(8D^2\) 公式。
+实际模型常把 SwiGLU 中间维度调小，使参数量或 FLOPs 与传统 $4D$ ReLU FFN 接近。因此不能看到 “GLU” 仍直接套用两矩阵 $8D^2$ 公式。
 
-## 5.2 “参数 N 倍、计算 k 倍”何时成立
+## 5.2 “参数 $N$ 倍、计算 $k$ 倍”何时成立
 
-若有 N 个完全相同的专家，每个专家与原 dense FFN 同宽，每个 token 激活 k 个，那么专家部分近似：
+若有 $N$ 个完全相同的专家，每个专家与原 dense FFN 同宽，每个 token 激活 $k$ 个，那么专家部分近似：
 
-\[
+$$
 P_{\mathrm{expert,total}}
 \approx
 N P_e
-\]
+$$
 
-\[
+$$
 F_{\mathrm{expert,active}}
 \approx
 k F_e
-\]
+$$
 
-这就是博客所说的“参数 N 倍、计算 k 倍”。
+这就是博客所说的“参数 $N$ 倍、计算 $k$ 倍”。
 
 但它只是一个**受条件约束的对比式**。真实 MoE 还可能包含：
 
@@ -1423,7 +1427,7 @@ MoE 典型地需要：
 
 因此实际速度由多个“木桶板”决定：
 
-\[
+$$
 \text{time}
 \approx
 \max(
@@ -1432,7 +1436,7 @@ MoE 典型地需要：
 \text{slowest expert},
 \text{memory movement}
 )
-\]
+$$
 
 不是简单的 FLOPs 除以峰值算力。
 
@@ -1488,7 +1492,7 @@ MoE 典型地需要：
 >
 > 把一个大专家拆成多个较小专家，并激活更多小专家，可以增加组合数和路由灵活性。DeepSeekMoE 强调细粒度专家分割与共享专家隔离，以促进更专门的专家组合。
 
-若把一个宽度为 \(m\) 的专家拆成若干宽度更小的专家，Top-k 的数字会变大，但总激活宽度未必同比增加。比较模型时不能只看“激活几个专家”，还要看每个专家多宽。
+若把一个宽度为 $m$ 的专家拆成若干宽度更小的专家，Top-$k$ 的数字会变大，但总激活宽度未必同比增加。比较模型时不能只看“激活几个专家”，还要看每个专家多宽。
 
 ## 5.6 Kimi K3 的 Stable LatentMoE
 
@@ -1499,11 +1503,11 @@ Kimi K3 技术报告给出的关键规模是：
 - 每层 896 个 routed experts；
 - 每个 token 激活 16 个 routed experts；
 - 每层 2 个 full-width shared experts；
-- routed experts 在宽度为 \(\ell\) 的潜在空间中工作。
+- routed experts 在宽度为 $\ell$ 的潜在空间中工作。
 
 > **术语卡｜Latent space / 潜在空间**
 >
-> “Latent”意为潜在的、未直接观察的。潜在空间是模型内部的压缩表示空间。LatentMoE 先把 full hidden width \(D\) 投影到较小宽度 \(\ell\)，在这个空间运行大量专家，再投影回 \(D\)。它用较小单专家成本换取更多专家数量。
+> “Latent”意为潜在的、未直接观察的。潜在空间是模型内部的压缩表示空间。LatentMoE 先把 full hidden width $D$ 投影到较小宽度 $\ell$，在这个空间运行大量专家，再投影回 $D$。它用较小单专家成本换取更多专家数量。
 
 简化流程：
 
@@ -1524,21 +1528,21 @@ Kimi K3 技术报告给出的关键规模是：
 
 数学形式：
 
-\[
+$$
 u
 =
-\sum_{i\in\mathcal T_k(x)}
-p_i E_i^{\mathrm{routed}}(W^\downarrow x)
-\]
+\sum_{i\in\mathcal{T}_k(x)}
+p_i E_i^{\mathrm{routed}}(W^{\downarrow} x)
+$$
 
-\[
+$$
 y
 =
 \sum_{j=1}^{N_s}
 E_j^{\mathrm{shared}}(x)
 +
-W^\uparrow\operatorname{RMSNorm}(u)
-\]
+W^{\uparrow}\operatorname{RMSNorm}(u)
+$$
 
 ### 为什么会有激活尺度问题
 
@@ -1554,7 +1558,7 @@ W^\uparrow\operatorname{RMSNorm}(u)
 更精确的原因是：
 
 1. routed path 包含降维、门控专家、聚合、升维等连续变换；
-2. 选中专家与路由权重变化，会改变聚合向量 \(u\) 的尺度；
+2. 选中专家与路由权重变化，会改变聚合向量 $u$ 的尺度；
 3. SwiGLU 的两个乘法因子都无上界；
 4. 在低精度训练中，极端激活更容易溢出或造成量化误差；
 5. 极端稀疏和巨大模型规模使这些稳定性问题更难控制。
@@ -1566,26 +1570,26 @@ Kimi K3 报告本身把问题归因于近四次连续矩阵乘链、极端规模
 > **术语卡｜RMSNorm**
 >
 > RMSNorm 是 Root Mean Square Layer Normalization。它用向量的均方根尺度做归一化，但不像 LayerNorm 那样减去均值：
-> \[
+> $$
 > \operatorname{RMSNorm}(x)
 > =
 > g\odot
 > \frac{x}
-> {\sqrt{\frac1d\sum_i x_i^2+\epsilon}}
-> \]
-> \(g\) 是可学习的逐维增益。作用是稳定整体尺度，同时保留模型重新放大或缩小不同通道的能力。
+> {\sqrt{\frac{1}{d}\sum_i x_i^2+\epsilon}}
+> $$
+> $g$ 是可学习的逐维增益。作用是稳定整体尺度，同时保留模型重新放大或缩小不同通道的能力。
 
-如果 \(u\) 整体变成 \(100u\)，忽略 \(\epsilon\)：
+如果 $u$ 整体变成 $100u$，忽略 $\epsilon$：
 
-\[
+$$
 \frac{100u}{\operatorname{RMS}(100u)}
 =
 \frac{100u}{100\operatorname{RMS}(u)}
 =
 \frac{u}{\operatorname{RMS}(u)}
-\]
+$$
 
-K3 在 routed expert 聚合后、\(W^\uparrow\) 之前做 RMSNorm，直接降低上投影对聚合尺度波动的敏感性。
+K3 在 routed expert 聚合后、$W^{\uparrow}$ 之前做 RMSNorm，直接降低上投影对聚合尺度波动的敏感性。
 
 它不是“修复所有矩阵误差”，而是控制进入升维投影的整体幅度。
 
@@ -1593,21 +1597,21 @@ K3 在 routed expert 聚合后、\(W^\uparrow\) 之前做 RMSNorm，直接降低
 
 SwiGLU：
 
-\[
+$$
 \operatorname{SiLU}(W_gx)\odot W_ux
-\]
+$$
 
 当正输入很大时：
 
-\[
+$$
 \operatorname{SiLU}(z)=z\sigma(z)\approx z
-\]
+$$
 
 门分支和内容分支都可能很大，乘积产生激活离群值。
 
 Kimi K3 使用 SiTU-GLU：
 
-\[
+$$
 \left[
 \beta_1\tanh\left(\frac{W_gx}{\beta_1}\right)
 \odot
@@ -1617,36 +1621,36 @@ Kimi K3 使用 SiTU-GLU：
 \left[
 \beta_2\tanh\left(\frac{W_ux}{\beta_2}\right)
 \right]
-\]
+$$
 
 > **术语卡｜Soft cap / 软截断**
 >
 > 硬截断直接把超过阈值的数压到阈值，拐点不可平滑；软截断用平滑函数逐渐饱和。  
-> \[
+> $$
 > \operatorname{softcap}(z,\beta)=\beta\tanh(z/\beta)
-> \]
-> 小值附近近似 \(z\)，大值时趋近 \(\pm\beta\)。
+> $$
+> 小值附近近似 $z$，大值时趋近 $\pm\beta$。
 
 K3 设置：
 
-\[
+$$
 \beta_1=4,\qquad\beta_2=25
-\]
+$$
 
-由于 \(|\tanh|<1\) 且 \(0<\sigma<1\)，单个坐标的乘积绝对值被控制在约：
+由于 $|\tanh|<1$ 且 $0<\sigma<1$，单个坐标的乘积绝对值被控制在约：
 
-\[
+$$
 \beta_1\beta_2=100
-\]
+$$
 
 以内。它保留小值附近类似 SwiGLU 的形状，同时抑制极端正激活。
 
 ## 5.9 Quantile Balancing：为什么固定步长 bias 不够
 
-普通 loss-free bias 更新每步只加减固定 \(\gamma\)：
+普通 loss-free bias 更新每步只加减固定 $\gamma$：
 
-- \(\gamma\) 小：适应负载变化慢；
-- \(\gamma\) 大：容易在目标负载附近来回振荡。
+- $\gamma$ 小：适应负载变化慢；
+- $\gamma$ 大：容易在目标负载附近来回振荡。
 
 当每层接近 1000 个 routed experts 时，这个权衡更难。
 
@@ -1654,7 +1658,7 @@ K3 设置：
 >
 > 分位数是把数据按大小排序后对应某个累计比例的位置。例如中位数是 50% 分位数。它不是平均值，而是“有多少数据位于这个阈值以下”。
 
-K3 的 Quantile Balancing（QB）从 Router margin 的分位位置估计：每个专家的 bias 应该移动到哪里，才能让其进入大约目标数量 token 的 Top-k。
+K3 的 Quantile Balancing（QB）从 Router margin 的分位位置估计：每个专家的 bias 应该移动到哪里，才能让其进入大约目标数量 token 的 Top-$k$。
 
 高层直觉：
 
@@ -1674,11 +1678,11 @@ Quantile Balancing：
 1. QB 根据当前批次估计下一步 bias，输入分布变化时仍可能有误差；
 2. “目标负载”是设计目标，不等于任何硬件、任何批次都获得数学上绝对完美的全局平衡。
 
-## 5.10 Temperature=0 为什么仍可能输出不同
+## 5.10 $\mathrm{temperature}=0$ 为什么仍可能输出不同
 
 > **术语卡｜Temperature / 温度**
 >
-> 生成时常把 logits 除以温度 \(\tau\) 再 Softmax。温度高，分布更平；温度低，分布更尖。工程 API 中 `temperature=0` 通常表示贪婪解码，而不是实际执行除以零。
+> 生成时常把 logits 除以温度 $\tau$ 再 Softmax。温度高，分布更平；温度低，分布更尖。工程 API 中 $\mathrm{temperature}=0$ 通常表示贪婪解码，而不是实际执行除以零。
 
 理论上，若：
 
@@ -1694,11 +1698,11 @@ Quantile Balancing：
 
 ### 浮点运算不满足严格结合律
 
-\[
+$$
 (a+b)+c
 \ne
 a+(b+c)
-\]
+$$
 
 在有限精度下，不同归约顺序会有微小差异。
 
@@ -1722,7 +1726,7 @@ a+(b+c)
 
 会，但不是必然随机源。
 
-硬 Top-k Router 具有不连续边界：
+硬 Top-$k$ Router 具有不连续边界：
 
 ```text
 专家 A 分数 0.500001
@@ -1733,10 +1737,10 @@ a+(b+c)
 
 但要明确：
 
-- 给定完全相同的精确 Router 分数，Top-k 本身是确定的；
+- 给定完全相同的精确 Router 分数，Top-$k$ 本身是确定的；
 - dense 模型也会因为 batch-dependent kernels 出现差异；
 - 现代 dropless MoE 不一定存在容量竞争；
-- 所以 MoE 是可能的**差异放大器**，不是 Temperature=0 非确定性的唯一或普遍主要根因。
+- 所以 MoE 是可能的**差异放大器**，不是 $\mathrm{temperature}=0$ 非确定性的唯一或普遍主要根因。
 
 ## 5.11 Soft MoE 到底“软”在哪里
 
@@ -1744,7 +1748,7 @@ a+(b+c)
 
 > **术语卡｜Soft MoE**
 >
-> Soft MoE 取消硬 Top-k token-to-expert 分配。它先用连续 dispatch 权重，把所有输入 token 的加权组合汇聚成固定数量的 expert slots；专家处理 slots；再用连续 combine 权重把 slot 输出分配回每个 token。
+> Soft MoE 取消硬 Top-$k$ token-to-expert 分配。它先用连续 dispatch 权重，把所有输入 token 的加权组合汇聚成固定数量的 expert slots；专家处理 slots；再用连续 combine 权重把 slot 输出分配回每个 token。
 
 简化流程：
 
@@ -1768,33 +1772,33 @@ a+(b+c)
 
 Soft MoE 的特点：
 
-- 不做离散 Top-k token dispatch；
+- 不做离散 Top-$k$ token dispatch；
 - 专家 slots 数固定，负载规则；
 - 路由对分数变化更平滑；
 - 所有专家 slots 通常都参与计算，因此不再具有同样的稀疏专家计算方式。
 
 原始 Soft MoE 工作主要面向视觉识别。若把“全序列 token 混合成 slot”的朴素形式直接用于自回归语言模型，未来 token 可能影响过去位置，因此需要因果化设计。
 
-它可以减弱硬 Top-k 边界导致的路径突变，但不能自动消除：
+它可以减弱硬 Top-$k$ 边界导致的路径突变，但不能自动消除：
 
 - 矩阵乘法数值差异；
 - Attention kernel 非确定性；
 - 动态 batching；
 - 并行归约差异。
 
-所以“Soft MoE 解决了 Temperature=0 不确定性”过于绝对。
+所以“Soft MoE 解决了 $\mathrm{temperature}=0$ 不确定性”过于绝对。
 
 ## 5.12 费曼复述：参数仓库与实际工单
 
 > MoE 像一家集团有很多仓库。总参数量是集团拥有的全部库存，激活参数量是当前订单真正取出的货。订单只取少量货，并不代表其他仓库不存在，也不代表它们不占存储。  
 > FLOPs 是搬了多少箱，延迟还取决于仓库之间运输、最慢仓库和排队。  
 > Kimi K3 把大量小专家放到压缩空间中，再用 RMSNorm 控制聚合尺度、SiTU-GLU 限制乘法离群值、Quantile Balancing 调整近千专家的负载门槛。  
-> Temperature=0 只去掉随机采样，不会让浮点数、批处理和 kernel 自动变成严格确定。
+> $\mathrm{temperature}=0$ 只去掉随机采样，不会让浮点数、批处理和 kernel 自动变成严格确定。
 
 ### 本节检查点
 
 1. 两矩阵 FFN 与 SwiGLU 的参数公式为什么不同？
-2. “参数 N 倍、计算 k 倍”依赖哪些条件？
+2. “参数 $N$ 倍、计算 $k$ 倍”依赖哪些条件？
 3. 为什么所有专家不必常驻同一张 GPU？
 4. K3 的 latent expert 与 shared expert 分别处理什么空间？
 5. RMSNorm 与 SiTU-GLU 各控制哪类尺度问题？
@@ -1869,7 +1873,7 @@ Soft MoE 的特点：
 
 > **术语卡｜Recall / 召回率**
 >
-> 在一组真实相关文档中，系统找回了多少。Recall@k 表示前 k 个结果覆盖了多少真实相关项。高召回关心“别漏”。
+> 在一组真实相关文档中，系统找回了多少。$\mathrm{Recall}@k$ 表示前 $k$ 个结果覆盖了多少真实相关项。高召回关心“别漏”。
 
 > **术语卡｜Precision / 精确率**
 >
@@ -1995,7 +1999,7 @@ LlamaParse 是可选产品之一，不是所有场景的通用最优答案。工
 块间重叠能减少边界切断，但重叠太大会：
 
 - 产生大量重复候选；
-- 让相同证据多次占据 Top-k；
+- 让相同证据多次占据 Top-$k$；
 - 增加索引和上下文成本；
 - 使模型误以为重复信息更可信。
 
@@ -2035,7 +2039,7 @@ LlamaParse 是可选产品之一，不是所有场景的通用最优答案。工
 
 一个常见形式：
 
-\[
+$$
 \operatorname{BM25}(q,d)
 =
 \sum_{t\in q}
@@ -2051,15 +2055,15 @@ k_1
 1-b+b\frac{|d|}{\operatorname{avgdl}}
 \right)
 }
-\]
+$$
 
 其中：
 
-- \(f(t,d)\)：词 \(t\) 在文档 \(d\) 中的频率；
-- \(|d|\)：文档长度；
-- \(\operatorname{avgdl}\)：平均文档长度；
-- \(k_1\)：控制词频饱和；
-- \(b\)：控制长度归一化。
+- $f(t,d)$：词 $t$ 在文档 $d$ 中的频率；
+- $|d|$：文档长度；
+- $\operatorname{avgdl}$：平均文档长度；
+- $k_1$：控制词频饱和；
+- $b$：控制长度归一化。
 
 #### 为什么词频要饱和
 
@@ -2069,19 +2073,19 @@ k_1
 
 令：
 
-\[
+$$
 a=\frac{|d|}{\operatorname{avgdl}}
-\]
+$$
 
 则：
 
-\[
+$$
 1-b+ba
 =
 1+b(a-1)
-\]
+$$
 
-不是 \(1-b(a-1)\)。
+不是 $1-b(a-1)$。
 
 ### Learned sparse retrieval
 
@@ -2122,31 +2126,31 @@ a=\frac{|d|}{\operatorname{avgdl}}
 
 内积：
 
-\[
+$$
 u^\top v
-\]
+$$
 
 余弦相似度：
 
-\[
+$$
 \cos(u,v)
 =
 \frac{u^\top v}{\|u\|\|v\|}
-\]
+$$
 
 欧氏距离：
 
-\[
+$$
 \|u-v\|_2
-\]
+$$
 
 若向量都做了 L2 归一化：
 
-\[
+$$
 \|u-v\|_2^2
 =
 2-2u^\top v
-\]
+$$
 
 此时：
 
@@ -2244,11 +2248,11 @@ HNSW 与 IVF 不是简单的“优缺点完全相反”，也不是互斥选择�
 
 BM25 得分与余弦相似度没有统一尺度。直接：
 
-\[
+$$
 0.5\times \text{BM25}
 +
 0.5\times \text{cosine}
-\]
+$$
 
 可能只是让数值范围较大的那一路支配结果。
 
@@ -2262,11 +2266,11 @@ BM25 得分与余弦相似度没有统一尺度。直接：
 > **术语卡｜RRF**
 >
 > RRF 是 Reciprocal Rank Fusion。它不比较原始分数，只根据每个结果在各检索器中的名次累加：
-> \[
+> $$
 > \operatorname{RRF}(d)
 > =
-> \sum_m\frac1{k+\operatorname{rank}_m(d)}
-> \]
+> \sum_m\frac{1}{k+\operatorname{rank}_m(d)}
+> $$
 > 这样能避开不同检索器分数尺度不一致的问题。它简单稳健，但也忽略了同一路内部的分数间隔。
 
 ## 6.9 查询优化：把用户问题变成可检索问题
@@ -2392,7 +2396,7 @@ LLM rerank 还能做成：
 检索结果不能原样全部塞进 prompt。上下文构建要做：
 
 1. **去重**：删除相同或高度重叠块；
-2. **多样性控制**：避免 Top-k 全来自同一段；
+2. **多样性控制**：避免 Top-$k$ 全来自同一段；
 3. **父块扩展**：补足定义、条件和上下文；
 4. **证据排序**：重要证据靠前，相关段落相邻；
 5. **预算分配**：在 token 上限内分配不同来源；
@@ -2425,15 +2429,15 @@ LLM rerank 还能做成：
 
 ### 检索层
 
-- **Recall@k**：真实相关证据有多少进入前 k；
-- **Precision@k**：前 k 中有多少真相关；
+- **$\mathrm{Recall}@k$**：真实相关证据有多少进入前 $k$；
+- **$\mathrm{Precision}@k$**：前 $k$ 中有多少真相关；
 - **MRR**：第一个相关结果出现得有多靠前；
 - **nDCG**：考虑多级相关性与排名位置；
-- **Hit Rate**：前 k 是否至少命中一个关键证据。
+- **Hit Rate**：前 $k$ 是否至少命中一个关键证据。
 
 > **术语卡｜MRR**
 >
-> Mean Reciprocal Rank。若第一个相关结果在第 \(r\) 位，该查询得分为 \(1/r\)，再对查询取平均。它特别关心“第一个有用结果是否靠前”。
+> Mean Reciprocal Rank。若第一个相关结果在第 $r$ 位，该查询得分为 $1/r$，再对查询取平均。它特别关心“第一个有用结果是否靠前”。
 
 > **术语卡｜nDCG**
 >
@@ -2462,7 +2466,7 @@ LLM rerank 还能做成：
 
 > **术语卡｜Golden set / 黄金评测集**
 >
-> 一组人工确认的问题、答案、关键证据和允许来源。它是调 chunk、embedding、Top-k、reranker 和 prompt 的共同基准。没有 golden set，只凭几个演示问题调参，很容易过拟合印象。
+> 一组人工确认的问题、答案、关键证据和允许来源。它是调 chunk、embedding、Top-$k$、reranker 和 prompt 的共同基准。没有 golden set，只凭几个演示问题调参，很容易过拟合印象。
 
 评估应分阶段诊断：
 
@@ -2486,7 +2490,7 @@ LLM rerank 还能做成：
 
 更准确的结论是：
 
-> “固定长度切块 + 单一路向量 Top-k + 全部塞进 prompt”这一初级配方，在复杂任务上经常不够；但运行时获取外部信息并据此生成，仍是解决时效性、可追溯性、私有知识和工具信息的重要范式。
+> “固定长度切块 + 单一路向量 Top-$k$ + 全部塞进 prompt”这一初级配方，在复杂任务上经常不够；但运行时获取外部信息并据此生成，仍是解决时效性、可追溯性、私有知识和工具信息的重要范式。
 
 grep、SQL、Web Search、API、知识图谱和 Agent Memory 并不是 RAG 的敌人。它们是不同检索器或外部信息通道。是否都称作 RAG 是术语选择，真正重要的是：
 
@@ -2550,7 +2554,7 @@ KL、MoE、RAG 看似分别属于数学、模型结构和应用工程，第一�
 
 ### 检索结果崩塌
 
-Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合检索、RRF、多样性约束、去重和重排缓解。
+Top-$k$ 全是同一来源、同一措辞或相互重复的 chunk。可用混合检索、RRF、多样性约束、去重和重排缓解。
 
 它们共同说明：
 
@@ -2577,7 +2581,7 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 神经网络喜欢连续、可微的量；工程系统经常必须做离散选择。
 
 - KL 是连续的分布差异；
-- Top-k Router 是离散选择；
+- Top-$k$ Router 是离散选择；
 - HNSW 搜索是离散图遍历；
 - PPO 生成的 token 是离散动作。
 
@@ -2602,7 +2606,7 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 - MoE FLOPs 合理，不代表 All-to-All 延迟合理；
 - HNSW 召回高，不代表每个查询都精确；
 - RAG 检索命中，不代表引用真正支持答案；
-- temperature=0 的算法确定，不代表浮点执行 batch-invariant。
+- $\mathrm{temperature}=0$ 的算法确定，不代表浮点执行 batch-invariant。
 
 真正的第一性原理分析应逐层问：
 
@@ -2634,13 +2638,13 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 | KL 非对称是因为 log 不对称 | 非对称来自交换后求期望的分布和概率比都改变 |
 | Forward KL 一定覆盖所有模式，Reverse KL 一定只选一个峰 | 这是近似分布受限时的常见倾向，不是无条件定理 |
 | SFT、蒸馏就是 Forward KL | MLE/SFT 可写成数据到模型的 KL 加常数；蒸馏有多种方向和目标 |
-| k1 总体一定非负 | k1 的期望非负；有限样本均值仍可能为负 |
-| k3 永远是低方差估计器 | 它逐样本非负且数值无偏；近分布时常有较好方差，但不是所有重尾情形的保证 |
+| $k_1$ 总体一定非负 | $k_1$ 的期望非负；有限样本均值仍可能为负 |
+| $k_3$ 永远是低方差估计器 | 它逐样本非负且数值无偏；近分布时常有较好方差，但不是所有重尾情形的保证 |
 | 无偏 KL 数值估计器可以直接当 loss 求导 | 数值无偏不保证梯度无偏；采样分布依赖参数时要处理 score-function 项 |
 | KL 放进 reward 后梯度被抹消 | detached reward 仍通过 advantage 与 policy gradient 影响策略，只是不通过 KL 表达式本身反传 |
 | PPO clipping 会直接裁掉 KL | clipping 作用于 PPO surrogate 中的概率比；KL 如何受影响取决于它被放在 advantage 还是额外 loss |
 | critic 学纯奖励、actor 加 KL 就必然不一致 | 这是不同算法设计；critic 应估计哪种 return 取决于 actor 的目标与方差设计 |
-| reference policy 就是 old policy | \(\pi_{\mathrm{ref}}\) 是 KL 参考，\(\pi_{\mathrm{old}}\) 是 rollout 快照，角色不同 |
+| reference policy 就是 old policy | $\pi_{\mathrm{ref}}$ 是 KL 参考，$\pi_{\mathrm{old}}$ 是 rollout 快照，角色不同 |
 
 ## 8.2 MoE（上）
 
@@ -2649,14 +2653,14 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 | MoE 就是更高级的 FFN | 更精确地说，是条件激活的专家 FFN 集合，通常替换部分 Transformer FFN |
 | 专家会自动成为数学、代码、语言专家 | 可能出现特化，但不保证具有清晰、稳定、可解释的人类语义 |
 | 更多总参数等于储存更多知识 | 更多参数提供容量，不自动保证知识、能力或利用效率 |
-| 经典 aux loss 是通用 Top-k 公式 | 文中 `argmax` 版本是 Switch 的 Top-1 形式；Top-k 需重新定义负载归一化 |
-| 均衡时 aux loss 为 1 | \(N\sum f_iP_i=1\)，完整 loss 是 \(\alpha\)；原例漏乘 \(\alpha\) |
-| 不均衡例子的 aux loss 是 2.91 | 若 \(\alpha=0.01\)，完整值应为 0.0291 |
-| Capacity 例子中 CF=1 得到 160 | CF=1 得 128；CF=1.25 才得 160 |
-| \(\alpha\) 同时表示 aux 权重和容量系数 | 建议分别用 \(\alpha_{\mathrm{aux}}\) 与 CF |
+| 经典 aux loss 是通用 Top-$k$ 公式 | 文中 $\operatorname{argmax}$ 版本是 Switch 的 Top-1 形式；Top-$k$ 需重新定义负载归一化 |
+| 均衡时 aux loss 为 1 | $N\sum f_iP_i=1$，完整 loss 是 $\alpha$；原例漏乘 $\alpha$ |
+| 不均衡例子的 aux loss 是 $2.91$ | 若 $\alpha=0.01$，完整值应为 $0.0291$ |
+| Capacity 例子中 $\mathrm{CF}=1$ 得到 $C=160$ | $\mathrm{CF}=1$ 得 $C=128$；$\mathrm{CF}=1.25$ 才得 $C=160$ |
+| $\alpha$ 同时表示 aux 权重和容量系数 | 建议分别用 $\alpha_{\mathrm{aux}}$ 与 $\mathrm{CF}$ |
 | Capacity 是所有 MoE 的必需机制 | 它是常见工程机制；存在 dropless 或动态形状实现 |
 | Token dropping 是删除 token | 通常是跳过该 token 的某条专家分支，残差路径仍存在 |
-| Routing collapse 是 dropping 的唯一或必然主因 | 它是重要原因；小 batch、领域偏移、低 CF 等也可造成溢出 |
+| Routing collapse 是 dropping 的唯一或必然主因 | 它是重要原因；小 batch、领域偏移、低 $\mathrm{CF}$ 等也可造成溢出 |
 | Expert Choice 一定破坏因果性 | 朴素全序列版本会破坏自回归因果性；双向、视觉、非自回归或因果化变体另论 |
 | Loss-free bias 按负载误差大小更新就是 DeepSeek-V3 实现 | 原始主方法和 DeepSeek-V3 使用固定步长 sign 更新 |
 | Loss-free 表示完全没有任何辅助损失 | DeepSeek-V3 仍有很小的 sequence-wise 平衡损失，主要批级平衡不用辅助梯度 |
@@ -2666,16 +2670,16 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 | 原文或常见表述 | 校正后的说法 |
 |---|---|
 | 所有 FFN 都可按两矩阵公式计算 | GLU/SwiGLU 通常有 gate、up、output 三个投影，宽度也常重新调整 |
-| MoE 一定是参数 N 倍、FLOPs k 倍 | 仅当单专家与 dense FFN 同宽且忽略共享专家、Router、通信等时成立 |
-| FLOPs 与专家数量无关 | 激活专家算术主要由 k 与单专家宽度决定，但路由、通信、存储和调度仍随架构变化 |
+| MoE 一定是参数 $N$ 倍、FLOPs $k$ 倍 | 仅当单专家与 dense FFN 同宽且忽略共享专家、Router、通信等时成立 |
+| FLOPs 与专家数量无关 | 激活专家算术主要由 $k$ 与单专家宽度决定，但路由、通信、存储和调度仍随架构变化 |
 | 所有专家必须常驻同一张 GPU | 所有权重要可访问，可分片到多 GPU、量化或 offload；代价不同 |
 | 推理显存按 active 参数算 | 权重存储更接近总参数分片；激活参数只描述当前算术，KV cache 等另计 |
 | K3 激活爆炸是 2.8T 参数把误差逐级放大 | 更精确原因是连续变换、聚合尺度波动、无界 SwiGLU 乘积与低精度风险；总参数数不是直接乘数 |
 | RMSNorm 消除了误差 | 它主要控制聚合表示的 RMS 尺度，不能修复所有方向性或数值误差 |
-| SiTU-GLU 把两个分支硬裁剪到 4 和 25 | 它用平滑 \(\tanh\) soft cap；绝对值渐近受限 |
+| SiTU-GLU 把两个分支硬裁剪到 4 和 25 | 它用平滑 $\tanh$ soft cap；绝对值渐近受限 |
 | Quantile Balancing 每批绝对完美平衡 | 它用当前 margin 分位估计下一步 bias；近似、分布变化和系统约束仍存在 |
-| MoE Router 自己引入随机性 | 给定相同精确分数，Top-k 可确定；它更像对微小数值差异的路径放大器 |
-| Temperature=0 应绝对相同 | 理论贪婪解码确定；真实系统还受浮点、batch、kernel 和并发执行路径影响 |
+| MoE Router 自己引入随机性 | 给定相同精确分数，Top-$k$ 可确定；它更像对微小数值差异的路径放大器 |
+| $\mathrm{temperature}=0$ 应绝对相同 | 理论贪婪解码确定；真实系统还受浮点、batch、kernel 和并发执行路径影响 |
 | Soft MoE 是每个 token 跑所有专家 | 它先把 token 连续汇聚成 expert slots，再处理并连续回写 |
 | Soft MoE 解决全部推理非确定性 | 它减弱硬路由不连续，但不能消除其他数值和 batching 来源 |
 
@@ -2688,12 +2692,12 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 | 某一 PDF 解析产品是首选 | 工具效果依文档、语言、隐私、成本与评测而变 |
 | 有一个通用最佳 chunk 大小 | 粒度要按任务、文档结构、模型和 golden set 调整 |
 | TF-IDF、BM25、倒排索引都是稀疏 embedding 模型 | 倒排索引是数据结构，TF-IDF 是权重/表示，BM25 是排序函数；SPLADE 才是典型 learned sparse model |
-| BM25 长度项 \(1-b+ba=1-b(a-1)\) | 正确是 \(1-b+ba=1+b(a-1)\) |
+| BM25 长度项 $1-b+ba=1-b(a-1)$ | 正确是 $1-b+ba=1+b(a-1)$ |
 | 以前用 BERT，现在用 Transformer | BERT 本身就是 Transformer encoder |
 | 双塔一定是两个对称网络 | query/doc encoder 可共享或不共享，也可结构不对称 |
 | 问答 RAG 基本都必须混合检索 | 混合检索常有价值，但应按语料与评测选择 |
 | BM25 与向量分数可直接加权相加 | 原始尺度不同，应归一化、校准、学习融合或使用 RRF |
-| HNSW 底层有全部向量，所以能找到全局 Top-K | HNSW 只探索部分图节点，是高召回 ANN，不保证精确全局 Top-K |
+| HNSW 底层有全部向量，所以能找到全局 Top-K | HNSW 只探索部分图节点，是高召回 ANN，不保证精确全局 Top-$K$ |
 | IVF 与 HNSW 优缺点完全相反 | 二者是不同 ANN 思路，可组合，性能取决于参数和数据 |
 | 向量数据库是 RAG 必需品 | 小规模可用本地索引或普通数据库；向量数据库主要解决规模化工程问题 |
 | 模型 Thinking 时就在做查询优化 | 查询优化应是可观察、可评测的显式系统步骤；内部推理不自动等价 |
@@ -2714,11 +2718,11 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 ## 9.1 不看正文，用一句话回答
 
 1. KL 为什么不是普通距离？
-2. 为什么交换 \(P\) 与 \(Q\) 会改变 KL 的关注区域？
-3. 为什么 k3 的期望不变？
+2. 为什么交换 $P$ 与 $Q$ 会改变 KL 的关注区域？
+3. 为什么 $k_3$ 的期望不变？
 4. 为什么“KL 数值无偏”不能推出“自动微分梯度无偏”？
 5. MoE 的总参数量与激活参数量有什么不同？
-6. 为什么 Top-k 会放大微小数值变化？
+6. 为什么 Top-$k$ 会放大微小数值变化？
 7. 为什么 MoE FLOPs 低，不代表延迟一定低？
 8. Soft MoE 的 slot 是什么？
 9. BM25、倒排索引和 HNSW 分别属于哪一层？
@@ -2733,10 +2737,10 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 
 1. KL 不对称，也不满足三角不等式，因此不是数学意义上的距离度量。
 2. 交换后，不仅概率比倒转，求期望的权重分布也改变；每个方向重点检查不同区域。
-3. \(k_3=k_1+(r-1)\)，而在 \(x\sim q,r=p/q\) 时，\(\mathbb E_q[r-1]=0\)。
+3. $k_3=k_1+(r-1)$，而在 $x\sim q,r=p/q$ 时，$\mathbb{E}_q[r-1]=0$。
 4. 参数还影响采样分布；完整梯度包含 score-function 项，直接对固定样本表达式微分可能漏项。
 5. 总参数是系统储存的全部权重；激活参数是当前 token 真正运行的权重。
-6. Top-k 是离散排序边界，两个接近分数一旦交换，计算路径就发生跳变。
+6. Top-$k$ 是离散排序边界，两个接近分数一旦交换，计算路径就发生跳变。
 7. 延迟还包括 All-to-All 通信、内存移动、kernel 效率、负载长尾和排队。
 8. slot 是多个输入 token 按连续权重汇聚得到的固定专家输入，不等于某个原始 token。
 9. BM25 是词法排名函数；倒排索引是数据结构；HNSW 是向量 ANN 索引算法。
@@ -2752,16 +2756,16 @@ Top-k 全是同一来源、同一措辞或相互重复的 chunk。可用混合�
 
 选两个三分类分布：
 
-\[
+$$
 P=(0.7,0.2,0.1),\qquad Q=(0.4,0.4,0.2)
-\]
+$$
 
 完成：
 
-1. 计算 \(D_{\mathrm{KL}}(P\parallel Q)\)；
-2. 计算 \(D_{\mathrm{KL}}(Q\parallel P)\)；
+1. 计算 $D_{\mathrm{KL}}(P\parallel Q)$；
+2. 计算 $D_{\mathrm{KL}}(Q\parallel P)$；
 3. 解释哪个类别对两个方向贡献差异最大；
-4. 把 \(Q\) 的第三类改为 0，观察支持集问题。
+4. 把 $Q$ 的第三类改为 0，观察支持集问题。
 
 学习目标：不要只得到一个总数，要看每项由“权重 × 对数比”如何组成。
 
@@ -2771,8 +2775,8 @@ P=(0.7,0.2,0.1),\qquad Q=(0.4,0.4,0.2)
 
 1. 随机生成 Router 分数；
 2. 统计每个专家的负载；
-3. 计算理论平均负载 \(1000\times2/8=250\)；
-4. 分别设置 CF=1、1.1、1.25，统计溢出；
+3. 计算理论平均负载 $1000\times2/8=250$；
+4. 分别设置 $\mathrm{CF}\in\{1,1.1,1.25\}$，统计溢出；
 5. 加入固定步长 bias 更新，观察适应速度和振荡；
 6. 再人为制造一个专家偏置，观察 routing collapse。
 
@@ -2889,14 +2893,14 @@ rerank 分数
 | Rerank | 重排 | 对粗召回候选做更精细相关性排序 |
 | RRF | 倒数排名融合 | 用名次而非原始分数融合多路检索 |
 | RMSNorm | 均方根归一化 | 控制向量整体尺度 |
-| Router | 路由器 | 给专家打分并选择 Top-k |
+| Router | 路由器 | 给专家打分并选择 Top-$k$ |
 | SFT | 监督微调 | 用标注输入输出继续训练模型 |
 | Softmax | 指数归一化 | 把 logits 转成概率分布 |
 | Support | 支持集 | 分布可能取到的区域 |
 | Temperature | 温度 | 调整生成分布尖锐程度 |
 | TF-IDF | 词频–逆文档频率 | 衡量词对文档的词法重要性 |
 | Token | 符号单元 | 模型处理和生成的离散基本单位 |
-| Top-k | 最高 k 个 | 在候选中做稀疏离散选择 |
+| Top-$k$ | 最高 $k$ 个 | 在候选中做稀疏离散选择 |
 | Vector database | 向量数据库 | 管理大规模向量索引、过滤与在线服务 |
 
 [返回目录](#toc)
