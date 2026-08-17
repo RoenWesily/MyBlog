@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --page-background: #f8fafc;
+  --page-foreground: #0f172a;
+}
+
+html.dark {
+  color-scheme: dark;
+  --page-background: #020617;
+  --page-foreground: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--page-foreground);
+  background:
+    radial-gradient(circle at 10% 0%, rgb(56 189 248 / 0.10), transparent 30rem),
+    radial-gradient(circle at 90% 10%, rgb(168 85 247 / 0.08), transparent 28rem),
+    var(--page-background);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+::selection {
+  background: rgb(125 211 252 / 0.45);
+}
+
+.font-serif {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", "Songti SC", SimSun, serif;
+}
+
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+  overflow-x: auto;
+  border: 1px solid rgb(148 163 184 / 0.2);
+  border-radius: 1rem;
+}
+
+.prose :where(code):not(:where(pre code, [class~="not-prose"] *)) {
+  border-radius: 0.35rem;
+  background: rgb(148 163 184 / 0.16);
+  padding: 0.15rem 0.35rem;
+  font-weight: 500;
+}
+
+.prose :where(code):not(:where(pre code, [class~="not-prose"] *))::before,
+.prose :where(code):not(:where(pre code, [class~="not-prose"] *))::after {
+  content: "";
+}
+
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.giscus-frame {
+  color-scheme: normal;
+}
